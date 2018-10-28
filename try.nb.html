@@ -176,7 +176,7 @@ $(document).ready(function () {
 
 
 <!-- rnb-text-begin -->
-<p>This is an <a href="http://rmarkdown.rstudio.com">R Markdown</a> Notebook. When you execute code within the notebook, the results appear beneath the code.</p>
+<p>This is an <a href="http://rmarkdown.rstudio.com">R Markdown</a> Notebook. When you execute code within the notebook, the results appear beneath the code. hjhj</p>
 <p>Try executing this chunk by clicking the <em>Run</em> button within the chunk or by placing your cursor inside it and pressing <em>Ctrl+Shift+Enter</em>.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
@@ -189,8 +189,47 @@ $(document).ready(function () {
 <p>When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the <em>Preview</em> button or press <em>Ctrl+Shift+K</em> to preview the HTML file).</p>
 <p>The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike <em>Knit</em>, <em>Preview</em> does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed. ###try try tryjk</p>
 <!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>library(ggplot2) library(OpenStreetMap)</p>
+<div id="section" class="section level78">
+<p></p>
+</div>
+<div id="read-the-data" class="section level1">
+<h1>Read the data</h1>
+<div id="section-1" class="section level78">
+<p></p>
+</div>
+</div>
+<div id="x2n5-8w5q-is-crimes-in-past-year-in-chicago-data-set" class="section level1">
+<h1>x2n5-8w5q is crimes in past year in Chicago data set</h1>
+<p>df &lt;- read.csv(“E:/UCL/005-GI System&amp;Science/Accessment-gis/2222/2018-08/2018-08/2018-08-metropolitan-street.csv”, stringsAsFactors = F) names(df) &lt;- tolower(names(df))</p>
+</div>
+<div id="we-dont-want-missing-values-in-lat-or-lon" class="section level1">
+<h1>we don’t want missing values in lat or lon</h1>
+<p>df &lt;- subset(df, !is.na(longitude) &amp; !is.na(latitude))</p>
+<div id="section-2" class="section level78">
+<p></p>
+</div>
+</div>
+<div id="do-some-plots" class="section level1">
+<h1>Do some plots</h1>
+<div id="section-3" class="section level78">
+<p></p>
+</div>
+</div>
+<div id="the-shape-of-chicago-no-underlying-shape-just-xy-points" class="section level1">
+<h1>the shape of chicago, no underlying shape, just x,y points</h1>
+<p>ggplot(df) + geom_point(aes(x=longitude, y=latitude), alpha=.2, size=.9) ggsave(“E:/UCL/005-GI System&amp;Science/Accessment-gis/2222/London-wards-2014 (1)/London-wards-2014_ESRI/London_Ward_CityMerged.shp”)</p>
+</div>
+<div id="now-lets-put-the-shape-of-chicago-underneath-the-points" class="section level1">
+<h1>now, let’s put the shape of chicago underneath the points</h1>
+<p>rlat &lt;- range(df<span class="math inline">\(latitude) rlon &lt;- range(df\)</span>longitude) merc &lt;- projectMercator(df<span class="math inline">\(latitude, df\)</span>longitude) #OSM uses mercator # give openmap the upper right and lower left corners you want for your map mp &lt;- openmap(c(rlat[2], rlon[1]), c(rlat[1], rlon[2]), type=“osm”) autoplot(mp) + geom_point(aes(x=merc[,1], y=merc[,2]), alpha=.1, size=.9) #ggsave(“chicago_crime_map_osm_underlay.jpg”)</p>
+<!-- rnb-text-end -->
+</div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpUaGlzIGlzIGFuIFtSIE1hcmtkb3duXShodHRwOi8vcm1hcmtkb3duLnJzdHVkaW8uY29tKSBOb3RlYm9vay4gV2hlbiB5b3UgZXhlY3V0ZSBjb2RlIHdpdGhpbiB0aGUgbm90ZWJvb2ssIHRoZSByZXN1bHRzIGFwcGVhciBiZW5lYXRoIHRoZSBjb2RlLiANCg0KVHJ5IGV4ZWN1dGluZyB0aGlzIGNodW5rIGJ5IGNsaWNraW5nIHRoZSAqUnVuKiBidXR0b24gd2l0aGluIHRoZSBjaHVuayBvciBieSBwbGFjaW5nIHlvdXIgY3Vyc29yIGluc2lkZSBpdCBhbmQgcHJlc3NpbmcgKkN0cmwrU2hpZnQrRW50ZXIqLiANCg0KYGBge3J9DQpwbG90KGNhcnMpDQpgYGANCg0KQWRkIGEgbmV3IGNodW5rIGJ5IGNsaWNraW5nIHRoZSAqSW5zZXJ0IENodW5rKiBidXR0b24gb24gdGhlIHRvb2xiYXIgb3IgYnkgcHJlc3NpbmcgKkN0cmwrQWx0K0kqLg0KDQpXaGVuIHlvdSBzYXZlIHRoZSBub3RlYm9vaywgYW4gSFRNTCBmaWxlIGNvbnRhaW5pbmcgdGhlIGNvZGUgYW5kIG91dHB1dCB3aWxsIGJlIHNhdmVkIGFsb25nc2lkZSBpdCAoY2xpY2sgdGhlICpQcmV2aWV3KiBidXR0b24gb3IgcHJlc3MgKkN0cmwrU2hpZnQrSyogdG8gcHJldmlldyB0aGUgSFRNTCBmaWxlKS4NCg0KVGhlIHByZXZpZXcgc2hvd3MgeW91IGEgcmVuZGVyZWQgSFRNTCBjb3B5IG9mIHRoZSBjb250ZW50cyBvZiB0aGUgZWRpdG9yLiBDb25zZXF1ZW50bHksIHVubGlrZSAqS25pdCosICpQcmV2aWV3KiBkb2VzIG5vdCBydW4gYW55IFIgY29kZSBjaHVua3MuIEluc3RlYWQsIHRoZSBvdXRwdXQgb2YgdGhlIGNodW5rIHdoZW4gaXQgd2FzIGxhc3QgcnVuIGluIHRoZSBlZGl0b3IgaXMgZGlzcGxheWVkLg0KIyMjdHJ5IHRyeSB0cnlqaw==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpUaGlzIGlzIGFuIFtSIE1hcmtkb3duXShodHRwOi8vcm1hcmtkb3duLnJzdHVkaW8uY29tKSBOb3RlYm9vay4gV2hlbiB5b3UgZXhlY3V0ZSBjb2RlIHdpdGhpbiB0aGUgbm90ZWJvb2ssIHRoZSByZXN1bHRzIGFwcGVhciBiZW5lYXRoIHRoZSBjb2RlLiBoamhqDQoNClRyeSBleGVjdXRpbmcgdGhpcyBjaHVuayBieSBjbGlja2luZyB0aGUgKlJ1biogYnV0dG9uIHdpdGhpbiB0aGUgY2h1bmsgb3IgYnkgcGxhY2luZyB5b3VyIGN1cnNvciBpbnNpZGUgaXQgYW5kIHByZXNzaW5nICpDdHJsK1NoaWZ0K0VudGVyKi4gDQoNCmBgYHtyfQ0KcGxvdChjYXJzKQ0KYGBgDQoNCkFkZCBhIG5ldyBjaHVuayBieSBjbGlja2luZyB0aGUgKkluc2VydCBDaHVuayogYnV0dG9uIG9uIHRoZSB0b29sYmFyIG9yIGJ5IHByZXNzaW5nICpDdHJsK0FsdCtJKi4NCg0KV2hlbiB5b3Ugc2F2ZSB0aGUgbm90ZWJvb2ssIGFuIEhUTUwgZmlsZSBjb250YWluaW5nIHRoZSBjb2RlIGFuZCBvdXRwdXQgd2lsbCBiZSBzYXZlZCBhbG9uZ3NpZGUgaXQgKGNsaWNrIHRoZSAqUHJldmlldyogYnV0dG9uIG9yIHByZXNzICpDdHJsK1NoaWZ0K0sqIHRvIHByZXZpZXcgdGhlIEhUTUwgZmlsZSkuDQoNClRoZSBwcmV2aWV3IHNob3dzIHlvdSBhIHJlbmRlcmVkIEhUTUwgY29weSBvZiB0aGUgY29udGVudHMgb2YgdGhlIGVkaXRvci4gQ29uc2VxdWVudGx5LCB1bmxpa2UgKktuaXQqLCAqUHJldmlldyogZG9lcyBub3QgcnVuIGFueSBSIGNvZGUgY2h1bmtzLiBJbnN0ZWFkLCB0aGUgb3V0cHV0IG9mIHRoZSBjaHVuayB3aGVuIGl0IHdhcyBsYXN0IHJ1biBpbiB0aGUgZWRpdG9yIGlzIGRpc3BsYXllZC4NCiMjI3RyeSB0cnkgdHJ5amsNCmBgYHtyfQ0KDQpgYGANCg0KbGlicmFyeShnZ3Bsb3QyKQ0KbGlicmFyeShPcGVuU3RyZWV0TWFwKQ0KDQojIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMNCiMgUmVhZCB0aGUgZGF0YQ0KIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjDQoNCiMgeDJuNS04dzVxIGlzIGNyaW1lcyBpbiBwYXN0IHllYXIgaW4gQ2hpY2FnbyBkYXRhIHNldA0KZGYgPC0gcmVhZC5jc3YoIkU6L1VDTC8wMDUtR0kgU3lzdGVtJlNjaWVuY2UvQWNjZXNzbWVudC1naXMvMjIyMi8yMDE4LTA4LzIwMTgtMDgvMjAxOC0wOC1tZXRyb3BvbGl0YW4tc3RyZWV0LmNzdiIsDQogICAgICAgICAgICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRikgDQpuYW1lcyhkZikgPC0gdG9sb3dlcihuYW1lcyhkZikpDQoNCiMgd2UgZG9uJ3Qgd2FudCBtaXNzaW5nIHZhbHVlcyBpbiBsYXQgb3IgbG9uDQpkZiA8LSBzdWJzZXQoZGYsICFpcy5uYShsb25naXR1ZGUpICYgIWlzLm5hKGxhdGl0dWRlKSkNCg0KIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjDQojIERvIHNvbWUgcGxvdHMNCiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIw0KDQojIHRoZSBzaGFwZSBvZiBjaGljYWdvLCBubyB1bmRlcmx5aW5nIHNoYXBlLCBqdXN0IHgseSBwb2ludHMNCmdncGxvdChkZikgKyBnZW9tX3BvaW50KGFlcyh4PWxvbmdpdHVkZSwgeT1sYXRpdHVkZSksIGFscGhhPS4yLCBzaXplPS45KQ0KZ2dzYXZlKCJFOi9VQ0wvMDA1LUdJIFN5c3RlbSZTY2llbmNlL0FjY2Vzc21lbnQtZ2lzLzIyMjIvTG9uZG9uLXdhcmRzLTIwMTQgKDEpL0xvbmRvbi13YXJkcy0yMDE0X0VTUkkvTG9uZG9uX1dhcmRfQ2l0eU1lcmdlZC5zaHAiKQ0KDQojIG5vdywgbGV0J3MgcHV0IHRoZSBzaGFwZSBvZiBjaGljYWdvIHVuZGVybmVhdGggdGhlIHBvaW50cw0KcmxhdCA8LSByYW5nZShkZiRsYXRpdHVkZSkNCnJsb24gPC0gcmFuZ2UoZGYkbG9uZ2l0dWRlKQ0KbWVyYyA8LSBwcm9qZWN0TWVyY2F0b3IoZGYkbGF0aXR1ZGUsIGRmJGxvbmdpdHVkZSkgI09TTSB1c2VzIG1lcmNhdG9yDQojIGdpdmUgb3Blbm1hcCB0aGUgdXBwZXIgcmlnaHQgYW5kIGxvd2VyIGxlZnQgY29ybmVycyB5b3Ugd2FudCBmb3IgeW91ciBtYXANCm1wIDwtIG9wZW5tYXAoYyhybGF0WzJdLCBybG9uWzFdKSwgYyhybGF0WzFdLCBybG9uWzJdKSwgdHlwZT0ib3NtIikNCmF1dG9wbG90KG1wKSArIGdlb21fcG9pbnQoYWVzKHg9bWVyY1ssMV0sIHk9bWVyY1ssMl0pLCBhbHBoYT0uMSwgc2l6ZT0uOSkNCiNnZ3NhdmUoImNoaWNhZ29fY3JpbWVfbWFwX29zbV91bmRlcmxheS5qcGciKQ0K</div>
 
 
 
