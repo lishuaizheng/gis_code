@@ -89,6 +89,8 @@ map1 + geom_point(data = crime, aes(x = Longitude, y = Latitude, colour = "grey5
 dec <- df[df$Month == "2016-12", ]
 dec.bike <- dec[dec$Crime.type == "Bicycle theft", ]
 map1 + geom_point(data = dec.bike, aes(x = Longitude, y = Latitude), colour = "red") + labs(title = "Bicycle theft in Greater London - December 2016")
+
+
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
