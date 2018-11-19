@@ -16,8 +16,6 @@ library(reshape)
 library(rgdal)
 library(data.table)
 library(reshape2)
-
-
 importdata <- function(dirs) {
   all <- NULL
   retain <- c("Month", "Longitude", "Latitude", "LSOA.code", "LSOA.name", "Crime.type")
@@ -67,31 +65,297 @@ write.csv(crimeTypes, file = "E:/UCL/005-GI System&Science/Assessment 1/data/cri
 #################################################################
 library(rmarkdown)
 library(rgeos)
-
 library(sp)
 library(ggplot2)
 library(ggmap)
+##### BASEMAP
 ldn1 <- readOGR(file.path("E:/UCL/005-GI System&Science/Accessment-gis/2222/London-wards-2014 (1)/London-wards-2014_ESRI/London_Ward_CityMerged.shp"), layer = "London_Ward_CityMerged")
-proj4string(ldn1) <- CRS("+init=epsg:27700")
-ldn1.wgs84 <- spTransform(ldn1, CRS("+init=epsg:4326"))
+proj4string(ldn1) <- CRS("+init=epsg:27700")      ### change into british coordinate system!!!
+ldn1.wgs84 <- spTransform(ldn1, CRS("+init=epsg:4326"))   #### then change into wgs1984 system!!!
 plot(ldn1.wgs84)
 library(ggplot2)
 map1 <- ggplot(ldn1.wgs84) +geom_polygon(aes(x = long, y = lat, group = group), fill = "white", colour = "black")
 map1 + labs(x = "Longitude", y = "Latitude", title = "Map of Greater London with the borough boundaries")
-#########################
+#########################   
 crime <- read.csv("E:/UCL/005-GI System&Science/Assessment 1/london_crime_vehicle.csv",stringsAsFactors = F)
+
 plot_crime <- map1+geom_jitter(aes(x=Longitude,y=Latitude,colour="grey50"),
   data=crime,alpha=0.2)+labs(x='Longitude',y='Latitude')
-
+plot(plot_crime)
 ##################################
-map1 + geom_point(data = crime, aes(x = Longitude, y = Latitude, colour = "grey50")) + scale_colour_manual(values = rainbow(14)) + labs(x = "Longitude", y = "Latitude", title = "Map of Greater London with the borough boundaries")
+map1 + geom_point(data = crime, aes(x = Longitude, y = Latitude, colour = "grey50")) + scale_colour_manual(values = rainbow(14)) + labs(x = "Longitude", y = "Latitude", title = "Map of the borough boundaries")
+########################################
+#dec <- df[df$Month == "2016-12", ]
+#dec.bike <- dec[dec$Crime.type == "Bicycle theft", ]
+#map1 + geom_point(data = dec.bike, aes(x = Longitude, y = Latitude), colour = "red") + labs(title = "Bicycle theft in Greater London - December 2016")
 
-dec <- df[df$Month == "2016-12", ]
-dec.bike <- dec[dec$Crime.type == "Bicycle theft", ]
-map1 + geom_point(data = dec.bike, aes(x = Longitude, y = Latitude), colour = "red") + labs(title = "Bicycle theft in Greater London - December 2016")
+```
+
+
+```{r}
+
+library(rmarkdown)
+library(rgeos)
+library(sp)
+install.packages('lattice')
+library(ggplot2)
+
+library(ggmap)
+library(maptools) 
+library(RColorBrewer) 
+library(classInt) 
+library(OpenStreetMap) 
+library(sp) 
+library(rgeos) 
+library(tmap) 
+library(tmaptools) 
+library(sf) 
+library(rgdal) 
+library(geojsonio)
+#########  basemap
+basemap2SF <- read_shape("E:/UCL/005-GI System&Science/Accessment-gis/2222/London-wards-2014 (1)/London-wards-2014_ESRI/London_Ward_CityMerged.shp",as.sf=TRUE,current.projection = 27700)
+basemap2SF26 <- st_transform(basemap2SF, 4326)
+library(ggplot2)
+ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap2SF26)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of the borough boundaries")
+ ######## point
+crimedata <- read.csv("E:/UCL/005-GI System&Science/Assessment 1/london_crime_vehicle.csv",stringsAsFactors = F)
+coordinates(crimedata) <- c("Longitude","Latitude")
+proj4string(crimedata) <- CRS("+init=epsg:4326")
+
+crimedataSF <- st_as_sf(crimedata)
+crimedataSF26 <- st_transform(crimedataSF, 4326)
+ggplot()+geom_sf(mapping = aes(geometry=geometry),data = crimedataSF26)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")
+#crimedata_1936 <- spTransform(crimedata, CRS("+init=epsg:27700"))
+
+#####################
+
+ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap2SF26)+geom_sf(mapping = aes(geometry=geometry,colour = "crime point"),data = crimedataSF26)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Crime Map")
+
+
+
+
+
+
+
 
 
 ```
+
+```{r}
+
+library(rmarkdown)
+library(rgeos)
+library(sp)
+library(ggplot2)
+library(ggmap)
+library(maptools) 
+library(RColorBrewer) 
+library(classInt) 
+library(OpenStreetMap) 
+library(sp) 
+library(rgeos) 
+library(tmap) 
+library(tmaptools) 
+library(sf) 
+library(rgdal) 
+library(geojsonio)
+install.packages("lattice")
+######### point#################################
+library(tidyverse)    ##clean the data
+crimedataClean <- read_csv("E:/UCL/005-GI System&Science/Assessment 1/2018-03-metropolitan-street.csv",col_names = TRUE)
+a <- crimedataClean[,5:10]###select specific column
+a %>%
+  filter(abs(Longitude)<2)
+a %>%                    #####output new csv
+  write.csv("E:/UCL/005-GI System&Science/Assessment 1/2018-03-metropolitan-street-clean.csv")   
+## transfer data sp-sf classification
+crimedata3 <- read.csv("E:/UCL/005-GI System&Science/Assessment 1/2018-03-metropolitan-street-clean.csv",stringsAsFactors = F)
+## clean the data out of borough
+crimedata3 <- crimedata3[which(crimedata3$Latitude > 51.275), ]
+crimedata3 <- crimedata3[which(crimedata3$Latitude < 51.7), ]
+crimedata3 <- crimedata3[which(crimedata3$Longitude > -0.53), ]
+crimedata3 <- crimedata3[which(crimedata3$Longitude < 0.35), ]
+
+coordinates(crimedata3) <- c("Longitude","Latitude")
+proj4string(crimedata3) <- CRS("+init=epsg:4326")
+crimedata3SF <- st_as_sf(crimedata3)
+crimedata3SF26 <- st_transform(crimedata3SF, 4326)
+##ggplot data without specific classification
+ggplot()+geom_sf( aes(geometry=geometry,colour = Crime.type),show.legend = "point",data = crimedata3SF26)+scale_colour_manual(values = rainbow(14))+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")     ###colour=...&scale_colour_manual important!!!
+
+##ggplot data in a single class
+dec.bike <- crimedata3SF36[crimedata3SF36$Crime.type == "Bicycle theft", ]
+ggplot()+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = "point",data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")
+
+##################### Borough map
+basemap3SF <- read_shape("E:/UCL/005-GI System&Science/Accessment-gis/2222/London-wards-2014 (1)/London-wards-2014_ESRI/London_Ward_CityMerged.shp",as.sf=TRUE,current.projection = 27700)
+basemap3SF26 <- st_transform(basemap3SF, 4326)
+library(ggplot2)
+ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of the borough boundaries")
+
+##################### add a basemap#################
+library(ggmap)
+londonBoundary <- c(left = -0.5103766, bottom = 51.28676, right = 0.3340146, top = 51.69187)
+londonBoundary2 <- as.vector(st_bbox(basemap3SF26))
+map <- get_stamenmap(londonBoundary2, zoom = 10, maptype = "toner-lite")
+
+
+##################################### 
+
+dec.bike <- crimedata3SF36[crimedata3SF36$Crime.type == "Bicycle theft", ]
+ggplot()+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = "point",data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")
+
+
+## final!!!######!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!##############
+ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26)+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = "point",data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Crime Map")
+###finalfinal!!!!!!!!!
+finalmap <- ggmap(map)+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes = FALSE,alpha=0.2)+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = "point",data = dec.bike,inherit.aes = FALSE)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Crime Map")
+#### must add inherit.aes = FALSE in geom_sf(data=xxxxxx,inherit.aes = FALSE)!!!important   ###I think the original error may be related to the lon and lat columns created in the fourCorners data.frame within the ggmap() function as the ggplot p is being created. That is, when you get a basemap with get_map() and try to ggplot it with ggmap(), the ggmap() function returns a ggplot p that uses an aes(x = lon, y = lat) aesthetic. The sf objects that you add on top using the geom_sf() function tries to inherit the x and y mapping from that original layer, but it really needs to use the $geometry column.
+finalmap
+##!!!!  END
+
+#######point density#####!!!!!!!!!!!!work!!!!!!!!!
+library(viridis)
+dec.bikeDF <- data.frame(dec.bike)   ###change into a data frame
+ggmap(map) + 
+  stat_density2d(mapping = aes(x=Longitude2,y=Latitude2,fill=..level.., alpha=..level..),bins=250, size=50, alpha = .3,geom = "polygon", data = dec.bikeDF) + scale_fill_gradient(low = "#00AFBB", high = "#FC3E07")
+
+##in raster
+ggmap(map) +
+  stat_density_2d(aes(x=Longitude2,y=Latitude2,fill = stat(density) ), alpha = .6,geom = "raster", data = dec.bikeDF, contour = FALSE) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme(legend.position='none')+coord_cartesian() + scale_fill_gradient(low = "#00AFBB", high = "#FC3E07")       #####这一步改变了坐标系！坐标系有问题来这儿找
+ 
+
+###   all together  ##in polygon heatmap!!!!!!!!!!!!!!!!!!!!
+ggmap(map) + 
+  geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes = FALSE,alpha=0.2)+
+  geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),colour="black",show.legend = "point",data = dec.bike,alpha = .3,inherit.aes = FALSE)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Crime Map")+
+  stat_density2d(mapping = aes(x=Longitude2,y=Latitude2,fill=..level.., alpha=..level..),bins=250, size=50, alpha = .3,geom = "polygon", data = dec.bikeDF) + scale_fill_gradient(low = "#00AFBB", high = "#FC3E07")
+
+
+
+
+
+#######Faceted Plots####################
+library(reshape2) 
+library(dplyr)
+library(tmap) 
+library(sf)
+
+crime_melt <- melt(crimedata3SF26,id.vars=c("geometry"),measure.vars="Crime.type")
+ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF36)+geom_sf( mapping=aes(geometry=geometry,colour =value),show.legend = "point",data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Crime Map")+facet_wrap(~variable)
+library(tmap) 
+library(sf) 
+crime_melt <- st_as_sf(crime_melt) 
+tmap_mode("plot")
+ggplot()+geom_sf(mapping = aes(geometry=geometry, fill=value),data = crime_melt)+facet_wrap(~variable)
+
+sp <- ggplot()+geom_sf( aes(geometry=geometry,colour = Crime.type),show.legend = "point",data = crimedata3SF26)+scale_colour_manual(values = rainbow(14))+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points") 
+sp + facet_grid(Crime.type ~ .)
+sp + facet_grid(~Crime.type,as.table=false)
+
+
+
+```
+
+
+```{r}
+library(spatstat)
+library(sp)
+library(rgeos)
+library(maptools)
+library(GISTools)
+library(tmap)
+library(sf)
+library(geojsonio)
+library(tmaptools)
+################################Borough map##################################
+##First, get the London Borough Boundaries
+EW <- geojson_read("http://geoportal.statistics.gov.uk/datasets/8edafbe3276d4b56aec60991cbddda50_2.geojson", what = "sp")
+#pull out london using grep and the regex wildcard for'start of the string' (^) to to look for the bit of the district code that relates to London (E09) from the 'lad15cd' column in the data slot of our spatial polygons dataframe
+BoroughMap <- EW[grep("^E09",EW@data$lad15cd),]
+#plot it using the base plot function
+qtm(BoroughMap)
+BNG = "+init=epsg:27700"
+BoroughMap27700 <- spTransform(BoroughMap, BNG)
+
+##############################crime point######################################
+crimedata4 <- read.csv("E:/UCL/005-GI System&Science/Assessment 1/2018-03-metropolitan-street-clean.csv",stringsAsFactors = F)
+coordinates(crimedata4) <- c("Longitude","Latitude")
+proj4string(crimedata4) <- CRS("+init=epsg:4326")
+crimedata4 <- spTransform(crimedata4, BNG)
+crimebike <- crimedata4[crimedata4$Crime.type == "Bicycle theft", ]
+qtm(crimebike)
+###############plot the cirme data (bike) in borough map###########
+Sys.setlocale(category = "LC_ALL", locale = "uk")    ### bug of laptop system made in china
+tmap_mode("view")
+tm_shape(BoroughMap27700) +
+  tm_polygons(col = NA, alpha = 0.5) +
+tm_shape(crimebike) +
+  tm_dots(col = "blue")
+
+############ find borough boundaries and set a window  #################
+englandBoundary <- geojson_read("https://opendata.arcgis.com/datasets/b027f1fd53764d8ebd585b81ff64f2fd_3.geojson", what = "sp")
+qtm(englandBoundary)
+BoroughBoundary <- englandBoundary[englandBoundary@data$nhsrlo17cd=="E39000018",]
+BoroughBoundary27700 <- spTransform(BoroughBoundary, BNG)
+tm_shape(BoroughBoundary) +tm_polygons(col = NA, alpha = 0.5)
+
+##set a window
+window <- as.owin(BoroughBoundary27700)
+plot(window)
+#create a ppp object
+crimebike.ppp <- ppp(x=crimebike@coords[,1],y=crimebike@coords[,2],window=window)
+plot(crimebike.ppp,pch=16,cex=0.5, main="Bicycle theft in ")
+
+plot(density(crimebike.ppp, sigma = 10000))
+
+###############density analysis###########################
+
+###refer to :https://mgimond.github.io/Spatial/point-pattern-analysis-in-r.html
+library(spatstat)
+Q <- quadratcount(crimebike.ppp, nx= 100, ny=50)
+plot(crimebike.ppp, pch=20, cols="grey70", main=NULL)
+plot(Q, add=TRUE)
+# Compute the density for each quadrat
+Q.d <- intensity(Q)
+# Plot the density
+plot( intensity(Q, image=TRUE), main=NULL)
+plot(crimebike.ppp, pch=40, cex=0.03, col=rgb(0,0,0,.2), add=TRUE)
+
+K1 <- density(crimebike.ppp)
+plot(K1, main=NULL)
+contour(K1, add=TRUE)
+
+################################Analysing Spatial Autocorrelation with Moran’s #########################
+library(rgdal)
+basemap4 <- readOGR("E:/UCL/005-GI System&Science/Accessment-gis/2222/London-wards-2014 (1)/London-wards-2014_ESRI/London_Ward_CityMerged.shp", layer="London_Ward_CityMerged")
+proj4string(basemap4) <- CRS("+init=epsg:27700")
+
+tmap_mode("view")
+tm_shape(basemap4) +
+  tm_polygons(col = NA, alpha = 0.5) +
+tm_shape(crimebike) +
+  tm_dots(col = "red")
+
+res <- poly.counts(crimebike, basemap4)
+#and add this as a column in our spatialPolygonsDataframe
+basemap4@data$PointCount<-res
+#as the wards are of different sizes, perhaps best that we calculate a density
+basemap4@data$PointDensity <- basemap4$PointCount/poly.areas(basemap4)
+#let's just check the data to see if the calculations have worked
+basemap4@data
+##plot it
+tm_shape(basemap4) +
+    tm_polygons("PointDensity",
+        style="jenks",
+        palette="PuOr",
+        midpoint=NA,
+        title="Bicycle Theft in London Borough")
+```
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
