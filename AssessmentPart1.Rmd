@@ -33,7 +33,6 @@ While geocoding with R, point data are loaded by **read_csv** function from the 
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-install.packages("lattice")
 library(rgeos)
 library(sp)
 library(RColorBrewer) 
@@ -53,7 +52,7 @@ a %>%                     #####output new csv
 
 ```
 
-```{r}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 
 ## read new csv file
 crimedata3 <- read.csv("E:/UCL/005-GI System&Science/Assessment 1/2018-03-metropolitan-street-clean.csv",stringsAsFactors = F)
@@ -145,7 +144,7 @@ tm_shape(crimebike) +
   tm_dots(col = "blue")
 ```
 The point density could be estimated by **stat_density** function in ggplot2. Similarly, it uses the principle of 2d Kernel density (Rdocumentation.org, 2018), but cannot set reasonable interval or classification manually.
-```{r}
+```{r message=TRUE, warning=FALSE}
 #########Point density##########
 library(viridis)
 dec.bikeDF <- data.frame(dec.bike)   ###change into a data frame
@@ -153,9 +152,10 @@ ggmap(map) +
   stat_density2d(mapping = aes(x=Longitude2,y=Latitude2,fill=stat(nlevel), alpha=..level..),bins=250, size=50, alpha = .06,geom = "polygon", data = dec.bikeDF) + scale_fill_gradient(low = "orange", high = "red")#To better visualize the density within each facet, use stat(nlevel)
 ```
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r echo=TRUE, message=TRUE}
 #####plot with basemap,legend and title#####
 library(ggsn)
+library(ggmap)
 ggmap(map) + 
   geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes = FALSE,alpha=0.2)+labs(x = "Longitude", y = "Latitude")+
   stat_density2d(mapping = aes(x=Longitude2,y=Latitude2,fill = stat(nlevel),alpha=..level..),bins=150, size=0.1, alpha = .06,geom = "polygon",show.legend = NA, data = dec.bikeDF) + scale_fill_continuous(low = "orange", high = "red")+ scale_alpha(range = c(0, 0.5), guide = FALSE) +  
@@ -166,8 +166,6 @@ ggmap(map) +
         legend.position = "right")+   ###theme() change title,legend,position etc.
   ggsave(paste0("density_map.png"), width = 10, height = 8, units = "in")
 
-
-
 install.packages("devtools")
 library(devtools)
 devtools::install_github("3wen/legendMap")
@@ -177,8 +175,6 @@ FINALMAP+
 scale_bar(lon = -130, lat = 26, 
               distance_lon = 500, distance_lat = 100, distance_legend = 200, 
               dist_unit = "km", orientation = FALSE)
-
-
 ```
 
 #4.Comparison of R and GIS
