@@ -1,35 +1,37 @@
 ---
-title: "Assessment Part 1"
-subtitle:"595 words"
+title: "Assessment Part 1 Commentary"
 output: html_notebook
+bibliography: GIS.bib
 ---
+
 #1.	Workflows
-Map generations in GIS and Rstudio follows the diagram below. They use the same point data in csv format and borough map in shapefile, but transform and manipulate data in various processes.
-```{r}
-knitr::include_graphics('E:/UCL/005-GI System&Science/Assessment 1/git_gui/workflow-r&gis.png')
+Map generations in GIS and Rstudio follow the diagram below. They use the same point data in _csv_ format and borough map in _shapefile_, but transform and manipulate data in various processes.
+```{r  echo=FALSE,  out.width = '100%'}
+knitr::include_graphics('E:/UCL/005-GI System&Science/Assessment 1/git_gui/workflow-r&gis2.jpg')
+
 ```
 
 #2. Data analysis and cartography in ArcGIS
 ##2.1 Data sources and manipulation
-In GIS, a point feature class is created by combining longitude and latitude from _csv_ parameters with XY fields, and exporting XY data into new feature class. Project in data management tools could convert coordinate system WGS1984 into British national grid. Then points inside borough area are selected by “select by location” button, while robbery data are chosen by equation in “select by attributes”.
+In GIS, a point feature class is created by combining longitude and latitude from _csv_ parameters with XY fields, and exporting XY data into new feature class. **Project** in data management tools could convert coordinate system WGS1984 into British national grid. Then points inside borough area are selected by “select by location” button, while robbery data are chosen by equation in “select by attributes”.
 
 ##2.2 Point density analyses
-To analyse the density of robbery points selected by attribute, we use “kernel density” rather than point density to accumulate total number of individual points in the cell (Pro.arcgis.com, 2018). The output is in the format of raster which is controlled in the cell size of 25 to save the response time but bring accuracy deviation as well. In the layer properties, appropriate range of value could be represented through “classify” button and colour ramp. In addition, we could choose the base map in “add basemap” with multiple styles.
-```{r}
+To analyse the density of robbery points selected by attribute, we use **kernel density** rather than point density to accumulate total number of individual points in the cell (Pro.arcgis.com, 2018). The output is in the format of raster which is controlled in the cell size of 25 to save the response time but bring accuracy deviation as well. In the layer properties, appropriate range of value could be represented through “classify” button and colour ramp. In addition, we could choose the base map in “add basemap” with multiple styles.
+```{r someVar, echo=FALSE,  out.width = '80%'}
 knitr::include_graphics('E:/UCL/005-GI System&Science/Assessment 1/git_gui/kernel_density_GIS.png')
 ```
 
 Before exporting the map, the final step is layout by inserting legend, scale bar, title etc., and all these elements could be dragged flexibly in the layout window. Besides, it’s useful to locator the map by using extent indicators to show data frame in England scale. 
-```{r}
+```{r echo=FALSE}
 knitr::include_graphics('E:/UCL/005-GI System&Science/Assessment 1/git_gui/GIS-finalmap.jpg')
 ```
 
 
 #3.Data analyses and visualization in R
 ##3.1 Preparing the data
-While geocoding with R, point data are loaded by read_csv function from the readr package. Before manipulating the data, tidyverse library could clean interfering text characters rather than manually cleaning in GIS. Sp and rgdal is used to transform coordinate reference system (CRS) in EPSG code. Unlike location dependence in GIS, point outside boundaries selected by coordinate coding in R.
+While geocoding with R, point data are loaded by **read_csv** function from the readr package. Before manipulating the data, **tidyverse** library could clean interfering text characters rather than manually cleaning in GIS. **Sp** and **rgdal** is used to transform coordinate reference system (CRS) in EPSG code. Unlike location dependence in GIS, point outside boundaries selected by coordinate coding in R.
 
-```{r}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 
 install.packages("lattice")
 library(rgeos)
@@ -60,13 +62,16 @@ crimedata3 <- crimedata3[which(crimedata3$Latitude > 51.275), ]
 crimedata3 <- crimedata3[which(crimedata3$Latitude < 51.7), ]
 crimedata3 <- crimedata3[which(crimedata3$Longitude > -0.53), ]
 crimedata3 <- crimedata3[which(crimedata3$Longitude < 0.35), ]
-print(crimedata3)
+summary(crimedata3)
 ## transform coordinate system into WGS1984(epsg4326), and transform sp-sf
 coordinates(crimedata3) <- c("Longitude","Latitude")
 proj4string(crimedata3) <- CRS("+init=epsg:4326")
 crimedata3SF <- st_as_sf(crimedata3)
 crimedata3SF26 <- st_transform(crimedata3SF, 4326)
 ```
+
+##3.2 ggplot2 and ggmap
+The ggplot2 package is extremely useful for a quick geospatial visualization. As **geom_sf()** function could draw more objects than geom_point(), we use it to plot simple features. 
 
 ```{r}
 #######Read Borough map in sf,plot map with data##########
@@ -77,22 +82,22 @@ basemap3SF26 <- st_transform(basemap3SF, 4326)
 library(ggplot2)
 ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of the borough boundaries")
 ```
-
+Ggplot2 code is flexible and compliable. For instance, colour control code inside or outside aes() receive various results. When colours in aes() are in tandem with scale_color_manual() outside aes(), the colour will be linked to corresponding legends. However, ggplot() have several complete themes similar to GIS symbology in layer properties, which simplified visualization process.
 ```{r}
-##ggplot data without classification
+##ggplot data without classification. This plot takes almost 20 minutes while GIS takes few seconds!
 ggplot()+geom_sf( aes(geometry=geometry,colour = Crime.type),alpha=0.3,show.legend = "point",data = crimedata3SF26)+scale_colour_manual(values = rainbow(14))+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")     ###colour=...&scale_colour_manual could classify the colour on crime type
-###this plot takes almost 20 minutes while GIS takes few seconds!
 ```
 
 ```{r}
 ##ggplot data in a single class--"Bicycle theft"
-dec.bike <- crimedata3SF36[crimedata3SF36$Crime.type == "Bicycle theft", ]
+dec.bike <- crimedata3SF26[crimedata3SF26$Crime.type == "Bicycle theft", ]
 ggplot()+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = "point",data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")
 ##plot 
 ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26)+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = "point",data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Bicycle Theft Map")
 ```
 
-```{r}
+The **get_map()** function can access base map data from various providers. Here we use **Stamen Maps** without API.
+```{r eval=FALSE, include=FALSE}
 ######## Add a basemap using ggmap##########
 library(ggmap)
 londonBoundary <- c(left = -0.5103766, bottom = 51.28676, right = 0.3340146, top = 51.69187)
@@ -100,12 +105,13 @@ londonBoundary2 <- as.vector(st_bbox(basemap3SF26))
 map <- get_stamenmap(londonBoundary2, zoom = 10, maptype = "toner-lite")
 ```
 
-```{r}
+```{r echo=TRUE}
 ####### Plot bicyle theft map with basemap#########
-finalmap <- ggmap(map)+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes =FALSE,alpha=0.2)+geom_sf( mapping=aes(geometry=geometry,colour ="red"),show.legend = FALSE,data = dec.bike,inherit.aes = FALSE)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Bicycle Theft Map")   #### must add inherit.aes = FALSE in geom_sf(data=,inherit.aes = FALSE)! When we try to ggplot a map with ggmap(), the ggmap() function returns a ggplot p that uses an aes(x = lon, y = lat) aesthetic,then the sf objects that we add on top using the geom_sf() function tries to inherit the x and y mapping from that original layer, but it actrually needs to use the $geometry column. 
+finalmap <- ggmap(map)+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes =FALSE,alpha=0.2)+geom_sf( mapping=aes(geometry=geometry,colour ="red"),show.legend = FALSE,data = dec.bike,inherit.aes = FALSE)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Bicycle Theft Map")   #### must add inherit.aes = FALSE in geom_sf(data=,inherit.aes = FALSE)! The ggmap() function returns a ggplot p that uses an aes(x = lon, y = lat) aesthetic,then the sf objects that we add on top using the geom_sf() function tries to inherit the x and y, but it actrually needs to use the $geometry column. 
 finalmap
 ```
-```{r}
+Apart from above, to plot point map in scalable range, **sf** and **mapview** function could bring us to the world of GIS in R.
+```{r echo=TRUE}
 library(spatstat)
 library(sp)
 library(rgeos)
@@ -138,7 +144,7 @@ tm_shape(BoroughMap27700) +
 tm_shape(crimebike) +
   tm_dots(col = "blue")
 ```
-
+The point density could be estimated by **stat_density** function in ggplot2. Similarly, it uses the principle of 2d Kernel density (Rdocumentation.org, 2018), but cannot set reasonable interval or classification manually.
 ```{r}
 #########Point density##########
 library(viridis)
@@ -147,15 +153,15 @@ ggmap(map) +
   stat_density2d(mapping = aes(x=Longitude2,y=Latitude2,fill=stat(nlevel), alpha=..level..),bins=250, size=50, alpha = .06,geom = "polygon", data = dec.bikeDF) + scale_fill_gradient(low = "orange", high = "red")#To better visualize the density within each facet, use stat(nlevel)
 ```
 
-```{r}
-
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#####plot with basemap,legend and title#####
 library(ggsn)
 ggmap(map) + 
   geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes = FALSE,alpha=0.2)+labs(x = "Longitude", y = "Latitude")+
   stat_density2d(mapping = aes(x=Longitude2,y=Latitude2,fill = stat(nlevel),alpha=..level..),bins=150, size=0.1, alpha = .06,geom = "polygon",show.legend = NA, data = dec.bikeDF) + scale_fill_continuous(low = "orange", high = "red")+ scale_alpha(range = c(0, 0.5), guide = FALSE) +  
   labs(fill='Point Density') +
-  ggtitle("London Borough Bicycle Theft Heat Map")+
-  theme(plot.title=element_text(color="black",size=20,face="bold"),
+  ggtitle("London Borough Bicycle Theft Heat Map 2018.3")+
+  theme(plot.title=element_text(color="black",size=18,face="bold"),
         legend.title = element_text(colour="black", size=12,face="bold"),
         legend.position = "right")+   ###theme() change title,legend,position etc.
   ggsave(paste0("density_map.png"), width = 10, height = 8, units = "in")
@@ -175,11 +181,19 @@ scale_bar(lon = -130, lat = 26,
 
 ```
 
+#4.Comparison of R and GIS
+The most distinctive characteristics of GIS and R are respectively real-time visualization and reproducibility. Objects and labels are elements in the form of code with separate geom functions in R. However, these data and files are rendered in layers and symbols which are manipulated by ArcToolBox that contains more analysis methods.
+```{r echo=FALSE}
+knitr::include_graphics('E:/UCL/005-GI System&Science/Assessment 1/git_gui/table compare-gis-r.png')
+```
 
+When dealing with large amounts of raw data or calculation, R shows obvious advantages. Additionally, the files could be overwritten in R rather than GIS when repeating operations. In addition, R is developed by packages in infinite functions, which are comparable with the plugins in QGIS instead of ArcGIS. In a word, we should combine advantages of both to tackle comprehensive issues.
 
+```{r eval=FALSE, include=FALSE}
+install.packages("citr")
+library(citr)
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```
+#Reference
+Pro.arcgis.com. (2018). _Differences between point, line, and kernel density—Help | ArcGIS Desktop_. [online] Available at: http://pro.arcgis.com/en/pro-app/tool-reference/spatial-analyst/differences-between-point-line-and-kernel-density.htm [Accessed 25 Nov. 2018].
+Rdocumentation.org. (2018). *stat_density function | R Documentation*. [online] Available at: https://www.rdocumentation.org/packages/ggplot2/versions/1.0.1/topics/stat_density [Accessed 25 Nov. 2018].
