@@ -82,7 +82,7 @@ library(ggplot2)
 ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of the borough boundaries")
 ```
 Ggplot2 code is flexible and compliable. For instance, colour control code inside or outside aes() receive various results. When colours in aes() are in tandem with scale_color_manual() outside aes(), the colour will be linked to corresponding legends. However, ggplot() have several complete themes similar to GIS symbology in layer properties, which simplified visualization process.
-```{r}
+```{r echo=TRUE}
 ##ggplot data without classification. This plot takes almost 20 minutes while GIS takes few seconds!
 ggplot()+geom_sf( aes(geometry=geometry,colour = Crime.type),alpha=0.3,show.legend = "point",data = crimedata3SF26)+scale_colour_manual(values = rainbow(14))+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")     ###colour=...&scale_colour_manual could classify the colour on crime type
 ```
@@ -90,13 +90,14 @@ ggplot()+geom_sf( aes(geometry=geometry,colour = Crime.type),alpha=0.3,show.lege
 ```{r}
 ##ggplot data in a single class--"Bicycle theft"
 dec.bike <- crimedata3SF26[crimedata3SF26$Crime.type == "Bicycle theft", ]
-ggplot()+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = "point",data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")
+ggplot()+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = FALSE,data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Map of points")
 ##plot 
-ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26)+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = "point",data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Bicycle Theft Map")
+ggplot()+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26)+geom_sf( mapping=aes(geometry=geometry,colour ="Bicycle theft"),show.legend = FALSE,data = dec.bike)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Bicycle Theft Map")
+
 ```
 
 The **get_map()** function can access base map data from various providers. Here we use **Stamen Maps** without API.
-```{r eval=FALSE, include=FALSE}
+```{r message=FALSE, warning=FALSE}
 ######## Add a basemap using ggmap##########
 library(ggmap)
 londonBoundary <- c(left = -0.5103766, bottom = 51.28676, right = 0.3340146, top = 51.69187)
@@ -104,13 +105,15 @@ londonBoundary2 <- as.vector(st_bbox(basemap3SF26))
 map <- get_stamenmap(londonBoundary2, zoom = 10, maptype = "toner-lite")
 ```
 
-```{r echo=TRUE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 ####### Plot bicyle theft map with basemap#########
-finalmap <- ggmap(map)+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes =FALSE,alpha=0.2)+geom_sf( mapping=aes(geometry=geometry,colour ="red"),show.legend = FALSE,data = dec.bike,inherit.aes = FALSE)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Bicycle Theft Map")   #### must add inherit.aes = FALSE in geom_sf(data=,inherit.aes = FALSE)! The ggmap() function returns a ggplot p that uses an aes(x = lon, y = lat) aesthetic,then the sf objects that we add on top using the geom_sf() function tries to inherit the x and y, but it actrually needs to use the $geometry column. 
+finalmap <- ggmap(map)+geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes =FALSE,alpha=0.2)+geom_sf( mapping=aes(geometry=geometry,colour ="red"),show.legend = FALSE,data = dec.bike,inherit.aes = FALSE)+theme_minimal()+ labs(x = "Longitude", y = "Latitude", title = "Borough Bicycle Theft Map")   
+#### must add inherit.aes = FALSE in geom_sf(data=,inherit.aes = FALSE)! The ggmap() function returns a ggplot p that uses an aes(x = lon, y = lat) aesthetic,then the sf objects using the geom_sf() function tries to inherit the x and y, but it actrually uses the $geometry column. 
 finalmap
 ```
+
 Apart from above, to plot point map in scalable range, **sf** and **mapview** function could bring us to the world of GIS in R.
-```{r echo=TRUE}
+```{r echo=TRUE, message=FALSE, warning=FALSE, results=FALSE}
 library(spatstat)
 library(sp)
 library(rgeos)
@@ -118,32 +121,55 @@ library(tmap)
 library(sf)
 library(geojsonio)
 library(tmaptools)
-################################Borough map##################################
+#########Borough map#########
 ##First, get the London Borough Boundaries
 EW <- geojson_read("http://geoportal.statistics.gov.uk/datasets/8edafbe3276d4b56aec60991cbddda50_2.geojson", what = "sp")
-#pull out london using grep and the regex wildcard for'start of the string' (^) to to look for the bit of the district code that relates to London (E09) from the 'lad15cd' column in the data slot of our spatial polygons dataframe
 BoroughMap <- EW[grep("^E09",EW@data$lad15cd),]
-#plot it using the base plot function
-qtm(BoroughMap)
+#plot it using the plot function
 BNG = "+init=epsg:27700"
 BoroughMap27700 <- spTransform(BoroughMap, BNG)
 
-##############################crime point######################################
+#########crime point#####
 crimedata4 <- read.csv("E:/UCL/005-GI System&Science/Assessment 1/2018-03-metropolitan-street-clean.csv",stringsAsFactors = F)
 coordinates(crimedata4) <- c("Longitude","Latitude")
 proj4string(crimedata4) <- CRS("+init=epsg:4326")
 crimedata4 <- spTransform(crimedata4, BNG)
 crimebike <- crimedata4[crimedata4$Crime.type == "Bicycle theft", ]
-qtm(crimebike)
-###############plot the cirme data (bike) in borough map###########
-Sys.setlocale(category = "LC_ALL", locale = "uk")    ### bug of laptop system made in china
+```
+```{r echo=TRUE, message=FALSE, warning=FALSE, results=FALSE}
+#####plot the cirme data (bike) in borough map####
+Sys.setlocale(category = "LC_ALL", locale = "uk")    ###fix the bug of my laptop system!
 tmap_mode("view")
 tm_shape(BoroughMap27700) +
   tm_polygons(col = NA, alpha = 0.5) +
 tm_shape(crimebike) +
   tm_dots(col = "blue")
 ```
-The point density could be estimated by **stat_density** function in ggplot2. Similarly, it uses the principle of 2d Kernel density (Rdocumentation.org, 2018), but cannot set reasonable interval or classification manually.
+We could use Kernel Density Estimation to plot the point density.
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=FALSE, results='hide'}
+###### find borough boundaries and set a window  #######
+englandBoundary <- geojson_read("https://opendata.arcgis.com/datasets/b027f1fd53764d8ebd585b81ff64f2fd_3.geojson", what = "sp")
+#qtm(englandBoundary)
+BoroughBoundary <- englandBoundary[englandBoundary@data$nhsrlo17cd=="E39000018",]
+BoroughBoundary27700 <- spTransform(BoroughBoundary, BNG)
+tm_shape(BoroughBoundary) +tm_polygons(col = NA, alpha = 0.5)
+
+##set a window
+window <- as.owin(BoroughBoundary27700)
+#plot(window)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, results='hide'}
+#create a ppp object
+crimebike.ppp <- ppp(x=crimebike@coords[,1],y=crimebike@coords[,2],window=window)
+```
+```{r echo=TRUE, message=FALSE, warning=FALSE, results='hide'}
+plot(crimebike.ppp,pch=16,cex=0.5, main="Bicycle theft in ")
+```
+```{r message=FALSE, warning=FALSE}
+plot(density (crimebike.ppp, sigma = 10000))
+```
+Also,The point density could be estimated by **stat_density** function in ggplot2. Similarly, it uses the principle of 2d Kernel density (Rdocumentation.org, 2018), but cannot set reasonable interval or classification manually.
 ```{r message=TRUE, warning=FALSE}
 #########Point density##########
 library(viridis)
@@ -152,29 +178,27 @@ ggmap(map) +
   stat_density2d(mapping = aes(x=Longitude2,y=Latitude2,fill=stat(nlevel), alpha=..level..),bins=250, size=50, alpha = .06,geom = "polygon", data = dec.bikeDF) + scale_fill_gradient(low = "orange", high = "red")#To better visualize the density within each facet, use stat(nlevel)
 ```
 
-```{r echo=TRUE, message=TRUE}
+```{r message=TRUE, warning=FALSE, paged.print=TRUE}
 #####plot with basemap,legend and title#####
 library(ggsn)
 library(ggmap)
-ggmap(map) + 
-  geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,inherit.aes = FALSE,alpha=0.2)+labs(x = "Longitude", y = "Latitude")+
+library(grid)
+finalfinal <- ggmap(map) + 
+  geom_sf(mapping = aes(geometry=geometry),data = basemap3SF26,arrow=arrow(),inherit.aes = FALSE,alpha=0.2)+labs(x = "Longitude", y = "Latitude")+
   stat_density2d(mapping = aes(x=Longitude2,y=Latitude2,fill = stat(nlevel),alpha=..level..),bins=150, size=0.1, alpha = .06,geom = "polygon",show.legend = NA, data = dec.bikeDF) + scale_fill_continuous(low = "orange", high = "red")+ scale_alpha(range = c(0, 0.5), guide = FALSE) +  
   labs(fill='Point Density') +
   ggtitle("London Borough Bicycle Theft Heat Map 2018.3")+
   theme(plot.title=element_text(color="black",size=18,face="bold"),
         legend.title = element_text(colour="black", size=12,face="bold"),
         legend.position = "right")+   ###theme() change title,legend,position etc.
+ 
   ggsave(paste0("density_map.png"), width = 10, height = 8, units = "in")
 
-install.packages("devtools")
-library(devtools)
-devtools::install_github("3wen/legendMap")
-library(legendMap)
-library(maptools)
-FINALMAP+
-scale_bar(lon = -130, lat = 26, 
-              distance_lon = 500, distance_lat = 100, distance_legend = 200, 
-              dist_unit = "km", orientation = FALSE)
+north2(finalfinal, scale = 0.1, x = 0.05, y = 0.3, symbol = 3)
+scalebar(finalfinal, dist = 200, st.size=1, height=0.02, dd2km = TRUE,x.min=-0.510,x.max=0.334,y.min=51.3,y.max=51.7, location="bottomright" , model = 'WGS84')
+install.packages('ggsn')
+library(ggsn)
+finalfinal
 ```
 
 #4.Comparison of R and GIS
